@@ -1,21 +1,28 @@
 import numpy as np
 from scipy.integrate import quad
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import model
+
+def phi_exact(x, n, h_bar, omega, m):
+    return model.harmonic(x, n, h_bar, omega, m)
 
 def chi_basis(x, L, n):
     return model.well(x, L, n)
 
+def psi_dvr(N, C, L, state, x):
+    psi = np.zeros_like(x)
 
-def phi_exact(x, n, h_bar, omega, m):
-    return model.harmonic(x, n, h_bar, omega, m)
+    for n in range(N):
+        psi += C[n, state] * chi_basis(L, n + 1, x)
+
+    return psi
 
 def run_dvr(h_bar, omega, m, L, N, x):
     """
     Run the DVR calculation
     :param N: int
               Number of DVR grid points
+    :param N_basis: int
+              Number of basis functions
     :param L: float
               box length
     :param omega: float
@@ -39,9 +46,9 @@ def run_dvr(h_bar, omega, m, L, N, x):
     for i in range(N):
         for j in range(N):
             integrand = lambda x: (
-                chi_basis(x, L, i)
+                chi_basis(x, L, i + 1)
                 * x *
-                chi_basis(x, L, j)
+                chi_basis(x, L, j + 1)
             )
 
             X[i,j], _ = quad(integrand, -L / 2, L / 2)
@@ -57,8 +64,8 @@ def run_dvr(h_bar, omega, m, L, N, x):
     V = U @ V_dvr @ U.conj().T
 
     # Calculate the kinetic energy matrix
-    for i in range(N):
-        T[i,i] = (h_bar**2 * np.pi**2 * i**2)/(2 * m * L**2)
+    for n in range(N):
+        T[n,n] = (h_bar**2 * np.pi**2 * (n+1)**2)/(2 * m * L**2)
 
     # Hamiltonian and eigenvalue problem solution
     H = T + V
@@ -68,7 +75,7 @@ def run_dvr(h_bar, omega, m, L, N, x):
     n = np.arange(N)
     E_exact = h_bar * omega * (n + 0.5)
 
-    L2_errors = np.zeros(N)
+    L2_errors_dvr = np.zeros(N)
     states = np.arange(N)
 
     # Errors
@@ -77,13 +84,13 @@ def run_dvr(h_bar, omega, m, L, N, x):
 
     for state in range(N):
         phi_e = phi_exact(x, state, h_bar, omega, m)
-        chi_v = chi_basis(x, L, state)
+        psi_b = psi_dvr(N, C, L, state, x)
 
-        overlap = np.trapezoid(phi_e * chi_v, x)
+        overlap = np.trapezoid(phi_e * psi_b, x)
         if overlap < 0:
-            chi_v = -chi_v
+            psi_b = -psi_b
 
-        L2_errors[state] = np.linalg.norm(chi_v - phi_e)
+        L2_errors_dvr[state] = np.linalg.norm(psi_b - phi_e)
 
-    return X, abs_error_energy, rel_error_energy,E_exact, E
+    return X, abs_error_energy, rel_error_energy, L2_errors_dvr,E_exact, E
 
