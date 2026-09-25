@@ -7,15 +7,15 @@ from matplotlib import gridspec
 h_bar = 1
 m = 1
 
-omega = 4
+omega = 2
 L = 20 # box length
 N_basis = 50 # number of basis set functions for approximation
 
 states = np.arange(N_basis)
 x = np.linspace(-L/2,L/2,1000)
 
-X, abs_error_energy_dvr, rel_error_energy_dvr,L2_errors_dvr, E_exact, E_dvr = dvr.run_dvr(h_bar, omega, m, L, N_basis, x)
-abs_error_energy_var, rel_error_energy_var, L2_errors_var, E_exact, E_var= var.run_var(h_bar, omega, m, L, N_basis, x)
+X, abs_error_energy_dvr, rel_error_energy_dvr,L2_errors_dvr, E_exact, E_dvr, C_dvr = dvr.run_dvr(h_bar, omega, m, L, N_basis, x)
+abs_error_energy_var, rel_error_energy_var, L2_errors_var, E_exact, E_var, C_var = var.run_var(h_bar, omega, m, L, N_basis, x)
 
 gs = gridspec.GridSpec(2, 4)
 gs.update(wspace=0.6)
@@ -83,6 +83,36 @@ plt.plot(states,E_exact, 'ko-',label='Exact')
 plt.xlabel(r'State $n$')
 plt.ylabel(r'$E_n$ [$\hbar\omega$]')
 plt.legend()
+
+states_to_plot = [1, 2, 5, 10, 20, 40]
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 8))
+axes = axes.ravel()
+
+for i, state in enumerate(states_to_plot):
+
+    phi_e = var.phi_exact(state, x, omega, h_bar, m)
+    psi_v = var.psi_variational(N_basis, C_var, L, state, x)
+    psi_d = dvr.psi_dvr(N_basis, C_dvr, L, state, x)
+
+    # Align signs
+    if np.trapezoid(phi_e * psi_v, x) < 0:
+        psi_v = -psi_v
+
+    if np.trapezoid(phi_e * psi_d, x) < 0:
+        psi_d = -psi_d
+
+    axes[i].plot(x, psi_d, 'b-.', label='DVR')
+    axes[i].plot(x, phi_e, 'k-', label='Exact')
+    axes[i].plot(x, psi_v, 'r--', label='Variational')
+
+    axes[i].set_title(f'$n={state}$')
+    axes[i].set_xlabel('$x$')
+    axes[i].set_ylabel(r'$\psi_n(x)$')
+    axes[i].grid(True)
+
+axes[0].legend()
+plt.tight_layout()
 
 plt.show()
 

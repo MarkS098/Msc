@@ -86,4 +86,4 @@ def run_var(h_bar, omega, m, L, N, x):
 
         L2_errors_var[state] = np.linalg.norm(psi_v - phi_e)
 
-    return abs_error_energy, rel_error_energy, L2_errors_var, E_exact, E
+    return abs_error_energy, rel_error_energy, L2_errors_var, E_exact, E, C

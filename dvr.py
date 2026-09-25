@@ -92,5 +92,5 @@ def run_dvr(h_bar, omega, m, L, N, x):
 
         L2_errors_dvr[state] = np.linalg.norm(psi_b - phi_e)
 
-    return X, abs_error_energy, rel_error_energy, L2_errors_dvr,E_exact, E
+    return X, abs_error_energy, rel_error_energy, L2_errors_dvr,E_exact, E, C
 
