@@ -7,7 +7,7 @@ from matplotlib import gridspec
 h_bar = 1
 m = 1
 
-omega = 2
+omega = 1
 L = 20 # box length
 N_basis = 50 # number of basis set functions for approximation
 
@@ -88,6 +88,7 @@ states_to_plot = [1, 2, 5, 10, 20, 40]
 
 fig, axes = plt.subplots(2, 3, figsize=(15, 8))
 axes = axes.ravel()
+fig.suptitle(f"Wave function comparison for: $L = {L}$, $N = {N_basis}$, $\\omega = {omega}$")
 
 for i, state in enumerate(states_to_plot):
 
