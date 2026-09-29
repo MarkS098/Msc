@@ -13,6 +13,7 @@ N_basis = 50 # number of basis set functions for approximation
 
 states = np.arange(N_basis)
 x = np.linspace(-L/2,L/2,1000)
+states_to_plot = [1, 2, 5, 9]
 
 X, abs_error_energy_dvr, rel_error_energy_dvr,L2_errors_dvr, E_exact, E_dvr, C_dvr = dvr.run_dvr(h_bar, omega, m, L, N_basis, x)
 abs_error_energy_var, rel_error_energy_var, L2_errors_var, E_exact, E_var, C_var = var.run_var(h_bar, omega, m, L, N_basis, x)
@@ -83,8 +84,6 @@ plt.plot(states,E_exact, 'ko-',label='Exact')
 plt.xlabel(r'State $n$')
 plt.ylabel(r'$E_n$ [$\hbar\omega$]')
 plt.legend()
-
-states_to_plot = [1, 2, 5, 10, 20, 40]
 
 fig, axes = plt.subplots(2, 3, figsize=(15, 8))
 axes = axes.ravel()

@@ -4,20 +4,18 @@ import model
 
 
 # Particle-in-a-box basis
-def chi_basis(l, n, x):
+def chi_basis(x, l, n):
     return model.well(x, l, n)
-
 
 # Exact harmonic oscillator basis
 def phi_exact(n, x, omega, h_bar, m):
     return model.harmonic(x, n, h_bar, omega, m)
 
-
 def psi_variational(N, C, L, state, x):
     psi = np.zeros_like(x)
 
     for n in range(N):
-        psi += C[n, state] * chi_basis(L, n + 1, x)
+        psi += C[n, state] * chi_basis(x, L, n + 1)
 
     return psi
 
@@ -54,9 +52,9 @@ def run_var(h_bar, omega, m, L, N, x):
         for k in range(N):
 
             integrand = lambda x: (
-                chi_basis(L, n+1, x)
+                chi_basis(x, L, n+1)
                 * 0.5*m*omega**2*x**2
-                * chi_basis(L, k+1, x)
+                * chi_basis(x, L, k+1)
             )
 
             V[n, k], _ = quad(integrand, -L/2, L/2)
@@ -74,7 +72,6 @@ def run_var(h_bar, omega, m, L, N, x):
     # Errors
     abs_error_energy = np.abs(E - E_exact)
     rel_error_energy = abs_error_energy / E_exact
-    ratio = abs_error_energy[::2]/abs_error_energy[1::2]
 
     for state in range(N):
         phi_e = phi_exact(state, x, omega, h_bar, m)

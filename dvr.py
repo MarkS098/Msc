@@ -2,17 +2,20 @@ import numpy as np
 from scipy.integrate import quad
 import model
 
-def phi_exact(x, n, h_bar, omega, m):
-    return model.harmonic(x, n, h_bar, omega, m)
 
+# Particle-in-a-box basis
 def chi_basis(x, L, n):
     return model.well(x, L, n)
+
+# Exact harmonic oscillator basis
+def phi_exact(x, n, h_bar, omega, m):
+    return model.harmonic(x, n, h_bar, omega, m)
 
 def psi_dvr(N, C, L, state, x):
     psi = np.zeros_like(x)
 
     for n in range(N):
-        psi += C[n, state] * chi_basis(L, n + 1, x)
+        psi += C[n, state] * chi_basis(x, L, n + 1)
 
     return psi
 
