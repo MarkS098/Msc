@@ -7,10 +7,6 @@ import model
 def chi_basis(x, L, n):
     return model.well(x, L, n)
 
-# Exact harmonic oscillator basis
-def phi_exact(x, n, h_bar, omega, m):
-    return model.harmonic(x, n, h_bar, omega, m)
-
 def psi_dvr(N, C, L, state, x):
     psi = np.zeros_like(x)
 
@@ -19,7 +15,7 @@ def psi_dvr(N, C, L, state, x):
 
     return psi
 
-def run_dvr(h_bar, omega, m, L, N, x):
+def run_dvr(h_bar, m, L, N):
     """
     Run the DVR calculation
     :param N: int
@@ -58,10 +54,10 @@ def run_dvr(h_bar, omega, m, L, N, x):
 
     # Get the lambda weights from the X matrix
     lambdas, U = np.linalg.eigh(X)
-    Lambda = np.diag(lambdas)
+    Lambdas = np.diag(lambdas)
 
     # Calculate the potential matrix using the weights
-    V_dvr = 0.5 * m * omega**2 * Lambda**2
+    V_dvr = (0.5*Lambdas**2 - 0.8)*np.exp(-0.1*Lambdas**2)
 
     # Diagonalize the DVR potential matrix to get an actual representation
     V = U @ V_dvr @ U.conj().T
@@ -74,26 +70,5 @@ def run_dvr(h_bar, omega, m, L, N, x):
     H = T + V
     E, C = np.linalg.eigh(H)
 
-    # Calculate
-    n = np.arange(N)
-    E_exact = h_bar * omega * (n + 0.5)
-
-    L2_errors_dvr = np.zeros(N)
-    states = np.arange(N)
-
-    # Errors
-    abs_error_energy = np.abs(E - E_exact)
-    rel_error_energy = abs_error_energy / E_exact
-
-    for state in range(N):
-        phi_e = phi_exact(x, state, h_bar, omega, m)
-        psi_b = psi_dvr(N, C, L, state, x)
-
-        overlap = np.trapezoid(phi_e * psi_b, x)
-        if overlap < 0:
-            psi_b = -psi_b
-
-        L2_errors_dvr[state] = np.linalg.norm(psi_b - phi_e)
-
-    return X, abs_error_energy, rel_error_energy, L2_errors_dvr,E_exact, E, C
+    return X, E, C, V_dvr, lambdas, H
 
