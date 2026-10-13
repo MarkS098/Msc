@@ -14,7 +14,7 @@ def well (x, L, n):
     :return: ndarray
              wave function
     """
-    psi_well = np.sqrt(2/L) * np.sin(n*np.pi * (x+ L/2)/L)
+    psi_well = np.sqrt(2/L) * np.sin(n*np.pi * (x + L/2)/L)
     return psi_well
 
 def harmonic(x, n, h_bar, omega, m):
