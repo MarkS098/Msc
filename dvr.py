@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate import quad
+from scipy.integrate import quad, simpson
 import model
 
 
@@ -15,17 +15,13 @@ def psi_dvr(N, C, L, state, x):
 
     return psi
 
-def run_dvr(h_bar, m, L, N):
+def run_dvr(h_bar, m, L, N, x):
     """
     Run the DVR calculation
     :param N: int
               Number of DVR grid points
-    :param N_basis: int
-              Number of basis functions
     :param L: float
               box length
-    :param omega: float
-           Harmonic oscillator frequency
     :param h_bar: float
            reduced planck constant
     :param m: float
@@ -42,22 +38,30 @@ def run_dvr(h_bar, m, L, N):
     T = np.zeros((N,N))
 
     # Calculate X matrix
+    # for i in range(N):
+    #     for j in range(N):
+    #         integrand = (
+    #             chi_basis(x, L, i + 1)
+    #             * x *
+    #             chi_basis(x, L, j + 1)
+    #         )
+    #
+    #         X[i,j] = simpson(integrand, x=x)
+
     for i in range(N):
         for j in range(N):
-            integrand = lambda x: (
-                chi_basis(x, L, i + 1)
-                * x *
-                chi_basis(x, L, j + 1)
-            )
+            n = i + 1
+            k = j + 1
 
-            X[i,j], _ = quad(integrand, -L / 2, L / 2)
+            if n != k and (n - k) % 2 != 0:
+                X[n - 1, k - 1] = (-8*L*n*k)/(np.pi**2 * (n**2 - k**2)**2)
 
     # Get the lambda weights from the X matrix
     lambdas, U = np.linalg.eigh(X)
-    Lambdas = np.diag(lambdas)
 
     # Calculate the potential matrix using the weights
-    V_dvr = (0.5*Lambdas**2 - 0.8)*np.exp(-0.1*Lambdas**2)
+    V_dvr = (0.5*lambdas**2 - 0.8)*np.exp(-0.1*lambdas**2)
+    V_dvr = np.diag(V_dvr)
 
     # Diagonalize the DVR potential matrix to get an actual representation
     V = U @ V_dvr @ U.conj().T
