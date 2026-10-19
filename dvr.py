@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate import quad, simpson
+from scipy.integrate import simpson
 import model
 
 
@@ -15,7 +15,35 @@ def psi_dvr(N, C, L, state, x):
 
     return psi
 
-def run_dvr(h_bar, m, L, N, x):
+def position_matrix(N, L , method = "analytical", x=None):
+    """ Construct the position matrix """
+    if method == "analytical":
+        X = np.zeros((N,N))
+        for i in range(N):
+            for j in range(N):
+                n = i + 1
+                k = j + 1
+
+                if n != k and (n - k) % 2 != 0:
+                    X[n - 1, k - 1] = (-8 * L * n * k) / (np.pi ** 2 * (n ** 2 - k ** 2) ** 2)
+
+    elif method == "numerical":
+        X = np.empty((N,N))
+        for i in range(N):
+            for j in range(N):
+                integrand = (
+                    chi_basis(x, L, i + 1)
+                    * x *
+                    chi_basis(x, L, j + 1)
+                )
+
+                X[i,j] = simpson(integrand, x=x)
+    else:
+        raise ValueError("Method must by 'analytical' or 'numerical'")
+
+    return X
+
+def run_dvr(h_bar, m, L, N, x, method):
     """
     Run the DVR calculation
     :param N: int
@@ -37,24 +65,7 @@ def run_dvr(h_bar, m, L, N, x):
     X = np.zeros((N,N))
     T = np.zeros((N,N))
 
-    # Calculate X matrix
-    # for i in range(N):
-    #     for j in range(N):
-    #         integrand = (
-    #             chi_basis(x, L, i + 1)
-    #             * x *
-    #             chi_basis(x, L, j + 1)
-    #         )
-    #
-    #         X[i,j] = simpson(integrand, x=x)
-
-    for i in range(N):
-        for j in range(N):
-            n = i + 1
-            k = j + 1
-
-            if n != k and (n - k) % 2 != 0:
-                X[n - 1, k - 1] = (-8*L*n*k)/(np.pi**2 * (n**2 - k**2)**2)
+    X = position_matrix(N, L , method, x)
 
     # Get the lambda weights from the X matrix
     lambdas, U = np.linalg.eigh(X)

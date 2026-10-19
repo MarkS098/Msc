@@ -1,22 +1,24 @@
 import numpy as np
 import dvr
 from matplotlib import pyplot as plt
-from matplotlib import gridspec
 
 # Physical constants
 h_bar = 1
 m = 1
-
 L = 20 # box length
 N_basis = 201 # number of basis set functions for approximation
-states_to_plot = [0, 2, 5, 10, 9, 8]
+
+states_to_plot = [0, 1, 2, 5, 8, 10]
+
+# Calculation options
+position_method = "analytical"      # "analytical" or "numerical"
 
 # Grids
 states = np.arange(N_basis)
 x = np.linspace(-L/2,L/2,10000)
 V_grid = (0.5*x**2 - 0.8)*np.exp(-0.1*x**2)
 
-X, E, C, V_dvr, lambdas, H = dvr.run_dvr(h_bar, m, L, N_basis, x)
+X, E, C, V_dvr, lambdas, H = dvr.run_dvr(h_bar, m, L, N_basis, x, position_method)
 
 # Mask to draw the ground state energy over the potential plot
 E_ground = E[0]
@@ -53,7 +55,7 @@ E_ground = []
 
 for L in L_values:
 
-    X, E, C, V_dvr, lambdas, H = dvr.run_dvr(h_bar, m, L, N_basis, x)
+    X, E, C, V_dvr, lambdas, H = dvr.run_dvr(h_bar, m, L, N_basis, x, position_method)
     E_ground.append(np.min(E))
 
 fig, ax = plt.subplots(figsize=(15,8))
