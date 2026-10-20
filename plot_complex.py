@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.lines import lineStyles
 
 import dvr_complex_scale
 
@@ -8,33 +7,42 @@ import dvr_complex_scale
 h_bar = 1
 m = 1
 L = 20 # box length
-N_basis = 20 # number of basis set functions for approximation
+N_basis = 150 # number of basis set functions for approximation
 
 # Calculation options
 position_method = "analytical"      # "analytical" or "numerical"
-theta = 0.1                         # Scaling angle in radians
+thetas = np.linspace(0.1,0.5,10)                         # Scaling angle in radians
 
 # Grids
 states = np.arange(N_basis)
 x = np.linspace(-L/2,L/2,10000)
-V_grid = (0.5*x**2 - 0.8)*np.exp(-0.1*x**2)
+all_energies = []
 
-X, energies, coeff, V_dvr, lambdas, H = dvr_complex_scale.run_dvr(h_bar, m, L, N_basis, x, position_method, theta)
 
-# Sort eigenvalues by real part
-order = np.argsort(energies.real)
-energies = energies[order]
-coeff = coeff[:, order]
+for theta in thetas:
 
-for E in energies:
-    if E.imag < 0:
-        E_r = E.real
-        Gamma = -2*E.imag
-        print(f"E = {E_r:.6f} - {Gamma / 2:.6f}i")
-        print(f"Resonance width Gamma = {Gamma:.6f}")
+    X, energies, coeff, V_dvr, lambdas, H = dvr_complex_scale.run_dvr(h_bar, m, L, N_basis, x, position_method, theta)
+    all_energies.append(energies)
 
+all_energies = np.array(all_energies)
+
+# plot bound-continuum
 fig, ax = plt.subplots()
-ax.scatter(energies.real, energies.imag)
-ax.set_xlabel(r'$\mathrm{Re}(E)$')
-ax.set_ylabel(r'$\mathrm{Im}(E)$')
+colors = plt.cm.viridis(np.linspace(0, 1, len(thetas)))
+
+for i, theta in enumerate(thetas):
+
+    E = all_energies[i]
+    ax.scatter(E.real, E.imag, color=colors[i],label=fr"$\theta = {theta:.2f}$")
+
+ax.axhline(0, color = "black", linewidth = 0.8)
+ax.axvline(0, color = "black", linewidth = 0.8)
+ax.set_xlabel(r"$\mathrm{Re}(E)$")
+ax.set_ylabel(r"$\mathrm{Im}(E)$")
+ax.set_title(f"Complex scaled spectrum for $L = {L}$, N = {N_basis}")
+ax.legend()
+ax.grid()
+plt.tight_layout()
 plt.show()
+
+
