@@ -15,7 +15,7 @@ def psi_dvr(N, C, L, state, x):
 
     return psi
 
-def position_matrix(N, L , method = "analytical", x=None):
+def position_matrix(N, L , method, x=None):
     """ Construct the position matrix """
     if method == "analytical":
         X = np.zeros((N,N))

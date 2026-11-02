@@ -1,5 +1,5 @@
 import numpy as np
-import dvr
+from dvr import dvr
 from matplotlib import pyplot as plt
 
 # Physical constants
