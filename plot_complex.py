@@ -8,16 +8,16 @@ import dvr_complex_scale
 h_bar = 1
 m = 1
 L = 20 # box length
-N_basis = 201 # number of basis set functions for approximation
+N_basis = 300 # number of basis set functions for approximation
 
 # Calculation options
 position_method = "analytical"      # "analytical" or "numerical"
-thetas = np.linspace(0.1,0.5,10)                         # Scaling angle in radians
+thetas = np.linspace(0,0.5,10)                         # Scaling angle in radians
 
 # Grids
 states = np.arange(N_basis)
 x = np.linspace(-L/2,L/2,10000)
-N_grid = np.linspace(1,200,200)
+N_grid = np.linspace(1,300,300)
 L_grid = np.linspace(1,100,100)
 all_energies = []
 all_coeffs = []
@@ -59,8 +59,6 @@ rms_motion = np.sqrt(np.mean(np.abs(tracks - mean_E[None, :])**2, axis=0))
 # Candidate resonances have positive real energy, negative imaginary energy
 mask = (mean_E.real > 0) & (mean_E.imag < -1e-8)
 candidates = np.where(mask)[0]
-
-# Rank candidates by absolute movement across the angle scan
 candidates = candidates[np.argsort(rms_motion[candidates])]
 
 # plot bound-continuum
@@ -132,7 +130,6 @@ plt.tight_layout()
 
 
 ## Convergence tests
-stability_results = {}
 E_reference = tracks[len(thetas) // 2, res_candidate]
 E_L = []
 E_N = []
@@ -150,29 +147,10 @@ for L_test in L_grid:
 
 E_L = np.array(E_L)
 
-# Calculate the optimal L
-L_position_change = np.abs(np.diff(E_L.real)) / np.abs(E_L.real[:-1]) * 100
-L_width_change = np.abs(np.diff(-2 * E_L.imag)) / np.abs((-2 * E_L.imag)[:-1]) * 100
-
-L_stable = (L_position_change < 1) & (L_width_change < 1)
-
-L_optimal = None
-
-for i in range(len(L_stable) - 2):
-    if np.all(L_stable[i:i+3]):
-        L_optimal = L_grid[i]
-        break
-
-if L_optimal is None:
-    L_optimal = L_grid[-1]
-    print("Warning: L convergence not reached")
-
-print("Optimal L:", L_optimal)
-
 # Recalculate reference energy
-x_optimal = np.linspace(-L_optimal/2, L_optimal/2, 10000)
+x_optimal = np.linspace(-L/2, L/2, 10000)
 
-_, energies_optimal, _, _, _, _ = dvr_complex_scale.run_dvr(h_bar, m, L_optimal, N_basis, x_optimal, position_method, theta_ref)
+_, energies_optimal, _, _, _, _ = dvr_complex_scale.run_dvr(h_bar, m, L, N_basis, x_optimal, position_method, theta_ref)
 
 res_mask = (energies_optimal.real > 0) & (energies_optimal.imag < -1e-8)
 resonance_candidate = energies_optimal[res_mask]
@@ -183,9 +161,9 @@ E_reference = resonance_candidate[idx]
 # Basis set stability
 for N_test in N_grid:
     N_test = int(N_test)
-    x_test = np.linspace(-L_optimal/2, L_optimal/2, 10000)
+    x_test = np.linspace(-L/2, L/2, 10000)
 
-    _, energies, _, _, _, _ = dvr_complex_scale.run_dvr(h_bar, m, L_optimal, N_test, x_test,position_method, theta_ref)
+    _, energies, _, _, _, _ = dvr_complex_scale.run_dvr(h_bar, m, L, N_test, x_test,position_method, theta_ref)
 
     res_mask = ((energies.real > 0) & (energies.imag < -1e-8))
     resonance_candidate = energies[res_mask]
@@ -197,26 +175,6 @@ for N_test in N_grid:
         E_N.append(resonance_candidate[idx])
 
 E_N = np.array(E_N)
-
-# Calculate optimal N
-N_position_change = np.abs(np.diff(E_N.real)) / np.abs(E_N.real[:-1]) * 100
-N_width_change = np.abs(np.diff(-2 * E_N.imag)) / np.abs((-2 * E_N.imag)[:-1]) * 100
-
-N_stable = (N_position_change < 1.0) & (N_width_change < 1.0)
-
-N_optimal = None
-
-for i in range(len(N_stable) - 2):
-    if np.all(N_stable[i:i+3]):
-        N_optimal = N_grid[i]
-        break
-
-if N_optimal is None:
-    N_optimal = N_grid[-1]
-    print("Warning: N convergence not reached.")
-
-print("Optimal N:", N_optimal)
-
 
 fig, axes = plt.subplots(2, 2, figsize=(11, 8))
 
